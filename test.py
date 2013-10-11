@@ -2,7 +2,7 @@ import point
 import utils
 import point_simple
 
-def main():
+def test():
 
     print "Binary Montgomery:"
     x, y, z, w, p, r = 18, 5, 22, 18, 29, 256
@@ -78,5 +78,3 @@ def main():
     z = bm(x, y, p, r)
     z = bm(z, 1, p, r)
     print "Z = %d" % (z)
-
-main()
