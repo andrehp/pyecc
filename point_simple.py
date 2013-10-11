@@ -1,7 +1,9 @@
-class Curva:
+from utils import modinv
+
+class Curve:
     pass
 
-class Ponto:
+class Point:
     def __init__(self, xx=0, yy=0, zz=0):
         self.x = xx
         self.y = yy
@@ -17,7 +19,7 @@ class Ponto:
 def add_simple(p1, p2, c):
     p1.z = 0
     p2.z = 0
-    inf = Ponto()
+    inf = Point()
     if(p1 == inf):
         return p2
     if(p2 == inf):
@@ -34,14 +36,14 @@ def add_simple(p1, p2, c):
         l = (p2.y - p1.y) % c.p
         l = (l * modinv((p2.x - p1.x) % c.p, c.p)) % c.p
 
-    p3 = Ponto()
+    p3 = Point()
     p3.x = (((l*l) % c.p) - ((p1.x + p2.x) % c.p)) % c.p
     p3.y = ((l * ((p1.x - p3.x) % c.p)) % c.p - p1.y) % c.p
     return p3
 
 def multiply_simple(p, r, c):
-    P = Ponto(p.x, p.y)
-    pr = Ponto()
+    P = Point(p.x, p.y)
+    pr = Point()
     while(r > 0):
         if(r & 1):
             pr = add_simple(pr, P, c)
@@ -49,19 +51,3 @@ def multiply_simple(p, r, c):
         P = add_simple(P, P, c)
 
     return pr
-
-def egcd(a, b):
-    x, lx = 0, 1
-    y, ly = 1, 0
-    
-    while(b != 0):
-        quo = a / b
-        a, b = b, a % b
-        x, lx = lx - quo*x, x
-        y, ly = ly - quo*y, y
-
-    return lx, ly
-
-def modinv(a, p):
-    x, y = egcd(a, p)
-    return x
