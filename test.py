@@ -4,10 +4,9 @@ import point_simple
 
 def test():
 
-    print "Binary Montgomery:"
+    #print "Binary Montgomery:"
     x, y, z, w, p, r = 18, 5, 22, 18, 29, 256
-    print "Expected: %d" % (((x*y - z)*w)**2%p)
-    r_minus1 = utils.modinv(r % p, p)
+    expected = (((x*y - z)*w)**2%p)
     r2 = (r**2) % p
     bm = utils.binary_montgomery
     x, y, z, w = bm(x, r2, p, r), bm(y, r2, p, r), bm(z, r2, p, r), bm(w, r2, p, r)
@@ -16,7 +15,9 @@ def test():
     ret = bm(ret, w, p, r)
     ret = bm(ret, ret, p, r);
     ret = utils.convert_int_to_standard(ret, p, r)
-    print "Result: %d" % (ret)
+    if(expected != ret):
+        print "Binary Montgomery multiplication is broken"
+        exit(1)
 
     c = point.Curve()
     c.a, c.b, c.p = 4, 20, 29
@@ -26,7 +27,7 @@ def test():
 
     c2 = utils.convert_curve_to_montgomery(c, c.p, c.r, c.r2) 
 
-    print "Addition:"
+    #print "Addition:"
     p1s = point_simple.Point(1, 5)
     p2s = point_simple.Point(20, 3)
 
@@ -39,16 +40,17 @@ def test():
     p3 = point.add(p1, p1, c2)
     p3 = utils.convert_point_to_standard(p3, c.p, c.r)
     p3 = utils.projective_to_standard(p3, c)
-    print "Expected: (%d, %d)" % (p3s.x, p3s.y)
-    print "Result: (%d, %d, %d)" % (p3.x, p3.y, p3.z)
-
+    if(p3s.x != p3.x or p3s.y != p3.y):
+        print "addition is broken!"
+        exit(1)
 
     p3 = point.add(p1, p2, c2)
     p3 = utils.convert_point_to_standard(p3, c.p, c.r)
     p3 = utils.projective_to_standard(p3, c)
     p3s = point_simple.add_simple(p1s, p2s, c)
-    print "Expected: (%d, %d)" % (p3s.x, p3s.y)
-    print "Result: (%d, %d, %d)" % (p3.x, p3.y, p3.z)
+    if(p3s.x != p3.x or p3s.y != p3.y):
+        print "addition is broken!"
+        exit(1)
 
     p2 = point.Point()
     p3 = point.add(p2, p1, c2)
@@ -56,25 +58,19 @@ def test():
     p3 = utils.projective_to_standard(p3, c)
     p2s = point_simple.Point()
     p3s = point_simple.add_simple(p1s, p2s, c)
-    print "Expected: (%d, %d)" % (p3s.x, p3s.y)
-    print "Result: (%d, %d, %d)" % (p3.x, p3.y, p3.z)
+    if(p3s.x != p3.x or p3s.y != p3.y):
+        print "addition is broken!"
+        exit(1)
 
-    print "Multiplication:"
+    #print "Multiplication:"
 
-    p3 = point.multiply(p1, 7, c2)
-    p3 = utils.convert_point_to_standard(p3, c.p, c.r)
-    p3 = utils.projective_to_standard(p3, c)
-    p3s = point_simple.multiply_simple(p1s, 7, c)
-    print "Expected: (%d, %d)" % (p3s.x, p3s.y)
-    print "Result: (%d, %d, %d)" % (p3.x, p3.y, p3.z)
+    for i in xrange(37):
+        p3 = point.multiply(p1, i, c2)
+        p3 = utils.convert_point_to_standard(p3, c.p, c.r)
+        p3 = utils.projective_to_standard(p3, c)
+        p3s = point_simple.multiply_simple(p1s, i, c)
+        if(p3s.x != p3.x or p3s.y != p3.y):
+            print "Point multiplication is broken!"
+            exit(1)
 
-    
-    print "Binary Montgomery:"
-    x, y, p, r = 202, 236, 239, 256
-    print "Expected: %d" % ((x*y)%p)
-    r2 = (r**2) % p
-    bm = utils.binary_montgomery
-    x, y = bm(x, r2, p, r), bm(y, r2, p, r)
-    z = bm(x, y, p, r)
-    z = bm(z, 1, p, r)
-    print "Z = %d" % (z)
+    print "All tests successful!"

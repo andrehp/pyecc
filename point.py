@@ -19,7 +19,7 @@ class Point:
     def __ne__(self, other):
         return not self.__eq__(other)
 
-# Point addition, does p1 + p2 on the curve c
+# Point addition, does p1 + p2 on the curve c, points already converted to montgomery representation
 def add(p1, p2, c):
     inf = Point()
     if(p1 == inf):
@@ -34,8 +34,6 @@ def add(p1, p2, c):
 
     x1, y1, z1 = p1.x, p1.y, p1.z
     x2, y2, z2 = p2.x, p2.y, p2.z
-
-    # transformar constantes!
 
     p3 = Point()
 
@@ -77,7 +75,9 @@ def add(p1, p2, c):
     p3.z = bm(h, bm(z1, z2, p, r), p, r)
     return p3
 
-# Does point multiplication p*r on the curve c
+# Does point multiplication p*r on the curve c, both p and c are
+# already converted to montgomery representation
+# Returns the value in Jacobian coordinates and montgomery representation
 def multiply(p, r, c):
     P = Point(p.x, p.y, p.z)
     pr = Point()

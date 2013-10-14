@@ -1,4 +1,5 @@
 import copy
+import point
 
 def egcd(a, b):
     x, lx = 0, 1
@@ -20,7 +21,7 @@ def modinv(a, p):
 
 def projective_to_standard(p, c):
     if(p.z == 0):
-        return Point()
+        return point.Point()
     p.x = (p.x * modinv(p.z**2 % c.p, c.p)) % c.p
     p.y = (p.y * modinv(p.z**3 % c.p, c.p)) % c.p
     p.z = 1
