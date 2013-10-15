@@ -71,8 +71,8 @@ def convert_point_to_standard(q, p, r):
 
 def convert_curve_to_montgomery(c, p, r, r2):
     cc = copy.copy(c)
-    cc.a = binary_montgomery(c.a, r2, p, r)
-    cc.b = binary_montgomery(c.b, r2, p, r)
+    cc.a = binary_montgomery(c.a % p, r2, p, r)
+    cc.b = binary_montgomery(c.b % p, r2, p, r)
     return cc
 
 def convert_int_to_montgomery(x, p, r, r2):
