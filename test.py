@@ -74,9 +74,51 @@ def test():
             print "Point multiplication is broken!"
             exit(1)
 
-    test_nist_p256()
+    test_montgomery()
+
+    #test_nist_p256()
 
     print "All tests successful!"
+
+def test_montgomery():
+    random.seed(42)
+
+    k, n, d = 4, 2, 0
+
+    c = point.Curve()
+    c.a, c.b, c.p = 4, 20, 29
+    c.r = 256
+    c.r_minus1 = utils.modinv(c.r - c.p, c.p) # r > p
+    c.r2 = (c.r**2) % c.p
+    c.pp = (2**(k*(d+1))) - utils.modinv(c.p, 2**(k*(d+1)))
+    c.pt = (c.pp % (2**(k*(d+1)))) * c.p
+    c.k, c.n, c.d = k, n, d
+
+    c2 = utils.convert_curve_to_montgomery(c, c.p, c.r, c.r2) 
+
+    p1s = point_simple.Point(1, 5)
+    p2s = point_simple.Point(20, 3)
+
+    p1 = point.Point(1, 5)
+    p2 = point.Point(20, 3)
+    p1 = utils.convert_point_to_montgomery(p1, c.p, c.r, c.r2)
+    p2 = utils.convert_point_to_montgomery(p2, c.p, c.r, c.r2)
+
+    p3s = point_simple.add_simple(p1s, p1s, c)
+    p3 = point.add_montgomery(p1, p1, c2)
+    p3 = utils.convert_point_to_standard(p3, c.p, c.r)
+    p3 = utils.projective_to_standard(p3, c)
+    if(p3s.x != p3.x or p3s.y != p3.y):
+        print "Addition is broken!"
+        exit(1)
+
+    p3 = point.add_montgomery(p1, p2, c2)
+    p3 = utils.convert_point_to_standard(p3, c.p, c.r)
+    p3 = utils.projective_to_standard(p3, c)
+    p3s = point_simple.add_simple(p1s, p2s, c)
+    if(p3s.x != p3.x or p3s.y != p3.y):
+        print "Addition is broken!"
+        exit(1)
 
 def test_nist_p256():
     random.seed(42)
@@ -101,10 +143,15 @@ def test_nist_p256():
         p3 = utils.convert_point_to_standard(p3, c.p, c.r)
         p3 = utils.projective_to_standard(p3, c)
 
+        p32 = point.multiply_montgomery(p1, j, c)
+        p32 = utils.convert_point_to_standard(p32, c.p, c.r)
+        p32 = utils.projective_to_standard(p32, c)
+
         p3s = point_simple.multiply_simple(p1s, j, c)
-        if(p3s.x != p3.x or p3s.y != p3.y):
+        if(p3s.x != p3.x or p3s.y != p3.y or p32.x != p3.x or p32.y != p3.y):
             print i
             print "(%d, %d)" % (p3.x, p3.y)
+            print "(%d, %d)" % (p32.x, p32.y)
             print "(%d, %d)" % (p3s.x, p3s.y)
             print "Point multiplication is broken!"
             exit(1)

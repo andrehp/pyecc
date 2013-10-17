@@ -20,6 +20,76 @@ class Point:
         return not self.__eq__(other)
 
 # Point addition, does p1 + p2 on the curve c, points already converted to montgomery representation
+def add_montgomery(p1, p2, c):
+    inf = Point()
+    if(p1 == inf):
+        return p2
+    if(p2 == inf):
+        return p1
+
+    bm = utils.montgomery
+    am = utils.add_mod
+    sm = utils.sub_mod
+    r, r2, p = c.r, c.r2, c.p
+
+    x1, y1, z1 = p1.x, p1.y, p1.z
+    x2, y2, z2 = p2.x, p2.y, p2.z
+
+    p3 = Point()
+
+    z12 = bm(z1, z1, c)
+    z22 = bm(z2, z2, c)
+    u1 = bm(x1, z22, c)
+    u2 = bm(x2, z12, c)
+    s1 = bm(y1, bm(z22, z2, c), c)
+    s2 = bm(y2, bm(z12, z1, c), c)
+    if(u1 == u2):
+        if(s1 != s2):
+            return p3
+        else: # point double
+            if(p1.y == 0):
+                return p3
+
+            s = bm(x1, bm(y1, y1, c), c)
+            s = bm(bm(4, r2, c), s, c)
+            m = bm(bm(3, r2, c), bm(x1, x1, c), c)
+            m = am(m, bm(c.a, bm(z12, z12, c), c), p)
+            p3.x = sm(bm(m, m, c), am(s, s, c.pt), p)
+            y12 = bm(y1, y1, c)
+            y14 = bm(y12, y12, c)
+            p3.y = bm(m, sm(s, p3.x, p), c)
+            p3.y = sm(p3.y, bm(bm(8, r2, c), y14, c), p)
+            p3.z = am(bm(y1, z1, c), bm(y1, z1, c), p)
+            return p3
+
+    h = sm(u2, u1, p)
+    s = sm(s2, s1, p)
+    p3.x = sm(bm(s, s, c), bm(h, bm(h, h, c), c), p)
+    tmp = bm(bm(2, r2, c), bm(u1, bm(h, h, c), c), c)
+    p3.x = sm(p3.x, tmp, p)
+
+    tmp = sm(bm(u1, bm(h, h, c), c), p3.x, p)
+    tmp = bm(s, tmp, c)
+    p3.y = sm(tmp, bm(s1, bm(h, bm(h, h, c), c), c), p)
+
+    p3.z = bm(h, bm(z1, z2, c), c)
+    return p3
+
+# Does point multiplication p*r on the curve c, both p and c are
+# already converted to montgomery representation
+# Returns the value in Jacobian coordinates and montgomery representation
+def multiply(p, r, c):
+    P = Point(p.x, p.y, p.z)
+    pr = Point()
+    while(r > 0):
+        if(r & 1):
+            pr = add(pr, P, c)
+        r = (r >> 1)
+        P = add(P, P, c)
+
+    return pr
+
+# Point addition, does p1 + p2 on the curve c, points already converted to montgomery representation
 def add(p1, p2, c):
     inf = Point()
     if(p1 == inf):
@@ -78,13 +148,13 @@ def add(p1, p2, c):
 # Does point multiplication p*r on the curve c, both p and c are
 # already converted to montgomery representation
 # Returns the value in Jacobian coordinates and montgomery representation
-def multiply(p, r, c):
+def multiply_montgomery(p, r, c):
     P = Point(p.x, p.y, p.z)
     pr = Point()
     while(r > 0):
         if(r & 1):
-            pr = add(pr, P, c)
+            pr = add_montgomery(pr, P, c)
         r = (r >> 1)
-        P = add(P, P, c)
+        P = add_montgomery(P, P, c)
 
     return pr

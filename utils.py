@@ -28,6 +28,17 @@ def projective_to_standard(p, c):
     return p
 
 # Adds a+b mod p, both a is [0,p-1] and b is [-p+1, p-1]
+def add(a, b, p):
+    if(b < 0):
+        return sub(a, -b, p)
+    c = a+b
+    return c
+
+def sub(a, b, p):
+    c = a - b
+    return c
+
+# Adds a+b mod p, both a is [0,p-1] and b is [-p+1, p-1]
 def add_mod(a, b, p):
     if(b < 0):
         return sub_mod(a, -b, p)
@@ -54,6 +65,35 @@ def binary_montgomery(x, y, p, r):
         pr = (a>>1) if ((a & 1) == 0) else ((a + p)>>1)
         #print a, pr
     return (pr - p) if (pr >= p) else pr
+
+def montgomery(x, y, c):
+    M, Mt, Mp = c.p, c.pt, c.pp
+    R, Rm = c.r, c.r_minus1
+    k, n, d = c.k, c.n, c.d
+    mask = (1<<k) - 1
+    yp = y
+
+    q = [0] * (n+d+2)
+    S = [0] * (n+d+3)
+    Y = [0] * (n+d+2)
+    for i in xrange(n):
+        Y[i] = (y & mask)
+        y = (y>>k)
+
+    for i in xrange(n+d+1):
+        q[i+d] = (S[i] & mask)
+        S[i+1] = (S[i]>>k) + q[i]*((Mt+1) >> (k*(d+1))) + Y[i] * x
+
+    S[n+d+2] = (1<<(k*d)) * S[n+d+1]
+    for j in xrange(d):
+        S[n+d+2] = S[n+d+2] + (q[n+j+d+1]<<(k*j))
+
+    while(S[n+d+2] >= c.p):
+        S[n+d+2] = S[n+d+2] - c.p
+
+    return S[n+d+2]
+
+
 
 def convert_point_to_montgomery(q, p, r, r2):
     qq = copy.copy(q)
